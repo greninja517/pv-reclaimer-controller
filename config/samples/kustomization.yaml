@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- reclaim_v1alpha1_pvreclaim.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples
