@@ -25,6 +25,7 @@ const (
 type PVReclaimStatus struct {
 	Phase              PVReclaimPhase `json:"phase,omitempty"`
 	ReclaimedTimestamp *metav1.Time   `json:"reclaimedTimestamp,omitempty"`
+	ObservedGeneration int64          `json:"observedGeneration,omitempty"`
 }
 
 // +kubebuilder:object:root=true
