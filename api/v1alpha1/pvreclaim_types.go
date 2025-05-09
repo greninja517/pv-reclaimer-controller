@@ -29,6 +29,7 @@ type PVReclaimStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,shortName=pvr
 // PVReclaim is the Schema for the pvreclaims API.
 type PVReclaim struct {
 	metav1.TypeMeta   `json:",inline"`

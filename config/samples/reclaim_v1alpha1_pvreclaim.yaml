@@ -1,9 +1,6 @@
 apiVersion: reclaim.pv-reclaimer.io/v1alpha1
 kind: PVReclaim
 metadata:
-  labels:
-    app.kubernetes.io/name: pv-reclaimer-controller
-    app.kubernetes.io/managed-by: kustomize
   name: pvreclaim-sample
 spec:
-  # TODO(user): Add fields here
+  persistentVolumeName: "<your-vol-name>"
