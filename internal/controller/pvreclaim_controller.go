@@ -31,7 +31,7 @@ type PVReclaimReconciler struct {
 func (r *PVReclaimReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var reconcileErr error = nil
 	// setting up the Logger
-	log := r.Log.WithValues("pv-reclaim", req.NamespacedName)
+	log := r.Log.WithValues("pvReclaim", req.NamespacedName)
 	log.Info("Reconciliation Started")
 
 	// fetching the actual object from informer cache
@@ -56,6 +56,7 @@ func (r *PVReclaimReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// updating the status only if it has actually changed in this code
 	originalStatus := pvReclaim.Status.DeepCopy()
 	defer func() {
+		log.Info("Running the DEFERED statements.")
 		if !reflect.DeepEqual(originalStatus, &pvReclaim.Status) {
 			// change took place. so, updating
 			log.Info("Updating the PVReclaim object Status")
@@ -92,7 +93,7 @@ func (r *PVReclaimReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// check if the PV is in Released state
 	if pv.Status.Phase != corev1.VolumeReleased {
-		log.Info("pv not in Released state", "pv name", pv.Name, "current status", pv.Status.Phase)
+		log.Info("pv not in Released state", "pvName", pv.Name, "currentStatus", pv.Status.Phase)
 		pvReclaim.Status.Phase = reclaimv1alpha1.FailurePhase
 		return ctrl.Result{}, nil
 	}

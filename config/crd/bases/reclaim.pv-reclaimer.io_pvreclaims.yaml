@@ -49,6 +49,9 @@ spec:
             type: object
           status:
             properties:
+              observedGeneration:
+                format: int64
+                type: integer
               phase:
                 description: PVReclaimStatus defines the observed state of PVReclaim.
                 type: string
