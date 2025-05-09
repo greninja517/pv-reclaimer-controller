@@ -1,29 +1,15 @@
-/*
-Copyright 2025.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controller
 
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/go-logr/logr"
 	reclaimv1alpha1 "github.com/greninja517/pv-reclaimer-controller/api/v1alpha1"
 )
 
@@ -31,25 +17,67 @@ import (
 type PVReclaimReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	Log    logr.Logger
 }
 
 // +kubebuilder:rbac:groups=reclaim.pv-reclaimer.io,resources=pvreclaims,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=reclaim.pv-reclaimer.io,resources=pvreclaims/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=reclaim.pv-reclaimer.io,resources=pvreclaims/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the PVReclaim object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.2/pkg/reconcile
+// +kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;update;patch
 func (r *PVReclaimReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	// setting up the Logger
+	log := r.Log.WithValues("pv-reclaim", req.Name)
+	log.Info("Reconciliation Started")
 
-	// TODO(user): your logic here
+	// fetching the actual object from informer cache
+	pvReclaim := &reclaimv1alpha1.PVReclaim{}
+	err := r.Client.Get(ctx, req.NamespacedName, pvReclaim)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Error(err, "PVReclaim resource not found")
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, "Failed to get PVReclaim")
+		return ctrl.Result{}, err
+	}
+
+	// fetching the PV object
+	pv := &corev1.PersistentVolume{}
+	err = r.Client.Get(ctx, client.ObjectKey{Name: pvReclaim.Spec.PersistentVolumeName}, pv)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Error(err, "PV resource doesn't exist")
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, "Failed to get PV")
+		return ctrl.Result{}, err
+	}
+
+	// check if the PV is in Released state
+	if pv.Status.Phase != corev1.VolumeReleased {
+		log.Info("pv not in Released state", "pv name", pv.Name, "current status", pv.Status.Phase)
+		return ctrl.Result{}, nil
+	}
+
+	// Check if the claimRef object is already  nil or not
+	if pv.Spec.ClaimRef == nil {
+		log.Info("PV not in Released state but no PVC is referenced in PV. Requeing...", "pv-name", pv.Name)
+		return ctrl.Result{}, nil
+	}
+
+	// make the PV available for binding
+	log.Info("Making the PV available for binding", "pv-name", pv.Name)
+	pvCopied := pv.DeepCopy()
+	pvCopied.Spec.ClaimRef = nil
+	if err = r.Client.Update(ctx, pvCopied, &client.UpdateOptions{
+		FieldManager: "pvreclaim-controller",
+	}); err != nil {
+		log.Error(err, "Failed to remove claimRef field from PV", "pv-name", pv.Name)
+		return ctrl.Result{}, err
+	}
+
+	log.Info("PV is now available for binding. Reconciliation Successfull", "pv-name", pv.Name)
 
 	return ctrl.Result{}, nil
 }
