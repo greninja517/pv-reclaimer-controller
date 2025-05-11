@@ -1,5 +1,12 @@
-image:
-  repository: "greninja517/pv-reclaim-controller"
-  tag: "1.0"
+controller:
+  image:
+    repository: "greninja517/pv-reclaim-controller"
+    tag: "1.0"
+  name: "pv-reclaimer"
+  replicas: 1
 
-controller_name: "pv-reclaimer"
+serviceAccount:
+  name: "pvreclaim-controller"
+
+role:
+  name: "pvreclaim-role"

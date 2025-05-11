@@ -11,7 +11,7 @@ spec:
     matchLabels:
       control-plane: controller-manager
       app.kubernetes.io/name: pv-reclaimer-controller
-  replicas: 1
+  replicas: {{ .Values.controller.replicas }}
   template:
     metadata:
       labels:
@@ -30,8 +30,8 @@ spec:
         args:
           - --leader-elect
           - --health-probe-bind-address=:8081
-        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-        name: {{ .Values.controller_name }}
+        image: {{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}
+        name: {{ .Values.controller.name }}
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -58,5 +58,5 @@ spec:
           requests:
             cpu: 10m
             memory: 64Mi
-      serviceAccountName: controller-manager
+      serviceAccountName: {{ .Values.serviceAccount.name }}
       terminationGracePeriodSeconds: 10
