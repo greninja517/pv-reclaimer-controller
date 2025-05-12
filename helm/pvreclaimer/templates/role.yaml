@@ -41,3 +41,16 @@ rules:
   - create
   - update
   - patch
+- apiGroups: [""] # core API group
+  resources: ["persistentvolumes"]
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+- apiGroups: [""] # Core API group
+  resources: ["events"]
+  verbs:
+  - create
+  - patch
