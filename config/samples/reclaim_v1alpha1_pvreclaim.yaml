@@ -1,6 +1,0 @@
-apiVersion: reclaim.pv-reclaimer.io/v1alpha1
-kind: PVReclaim
-metadata:
-  name: pvreclaim-sample
-spec:
-  persistentVolumeName: "<your-vol-name>"
