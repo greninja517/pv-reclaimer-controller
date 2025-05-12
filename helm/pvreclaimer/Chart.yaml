@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: v2
 name: pvreclaimer
 description: A Helm chart for installing the pv-reclaimer-controller in Kubernetes cluster. The controller looks for Released local PersistenvVolumes(PVs) in the cluster and brings them back to the Avaialbe state. It uses the CRD PVReclaim to select the PVs in the cluster that you want to modify. The controller watches this resource PVReclaim and it is deployed as a Deployment in the cluster. 
 

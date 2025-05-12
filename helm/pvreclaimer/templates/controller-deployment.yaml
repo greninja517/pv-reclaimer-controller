@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller-manager
+  name: {{ .Values.controller.name }}
   namespace: {{ .Release.Namespace }}
   labels:
     control-plane: controller-manager
@@ -31,7 +31,7 @@ spec:
           - --leader-elect
           - --health-probe-bind-address=:8081
         image: {{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}
-        name: {{ .Values.controller.name }}
+        name: pv-reclaim
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
