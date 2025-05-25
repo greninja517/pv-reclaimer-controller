@@ -36,17 +36,24 @@ metadata:
 spec:
   persistentVolumeName: "myapp-pv"
 ```
+The PersistentVolume(PV) provided in pv-reclaim.yml should be in `Released` State.
 
 ### 2. Apply the CR to the Cluster
 ```bash
 kubectl apply -f pv-reclaim.yml
 ```
 
-### 3. Verify the Resource
+### 3. Verify the Resource has been created
 ```bash
 kubectl get pvr
 ```
 pvr is the short name for the PVReclaim custom resource.
+
+### 4. Verfiy the PersistentVolume Status
+```bash
+kubectl get pv myapp-pv
+```
+You should see the status as `Available` means that the PV is now ready to be attached with other PVCs.
 
 ## Notes:
 Ensure that the PV specified in the persistentVolumeName exists and is in the Released state.
